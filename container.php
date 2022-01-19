@@ -12,7 +12,21 @@ class Container {
     {
         if (isset($this->definitions[$id])) {
             $class_name = $this->definitions[$id];
-            return new $class_name();
+
+            $ref = new ReflectionClass($class_name);
+            $constructor = $ref->getConstructor();
+
+            if (is_null($constructor)) {
+                return new $class_name();
+            }
+
+            $args = [];
+            foreach ($constructor->getParameters() as $parameter) {
+                $type = $parameter->getType();
+                $name = strtolower($type->getName());
+                $args[] = $this->get($name);
+            }
+            return new $class_name(...$args);
         }
 
         return null;
